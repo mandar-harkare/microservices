@@ -5,8 +5,8 @@ This repository contains a simple Node.js app that shows you how to perform CRUD
 Follow these simple instructions and you'll be up and running:
 
 ```
-git clone https://github.com/markwatsonatx/tutorial-rethinkdb-nodejs-crud
-cd tutorial-rethinkdb-nodejs-crud
+git clone https://github.com/mandar-harkare/microservices.git
+cd microservices
 docker-compose up -d
 ```
 
