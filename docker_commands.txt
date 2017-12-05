@@ -1,0 +1,37 @@
+docker run --name rethinkDB -v "data" -d rethinkdb
+git clone https://github.com/markwatsonatx/tutorial-rethinkdb-nodejs-crud.git
+cd to F:\Mandar NCIRL\Course Material\Sem3\Research Project\POC\docker\tutorial-rethinkdb-nodejs-crud
+docker-compose up -d
+node:alpine
+docker run -i -d -p 192.168.99.100:80:80 -v //c/Users/Eblog/docker/tutorial-rethinkdb-nodejs-crud/src/app/://usr/src/app/ -v //c/Users/Eblog/docker/tutorial-rethinkdb-nodejs-crud/startup/://usr/startup/ --name tut_node node:alpine; docker ps;
+docker exec tut_node bash -c 'npm server'
+docker exec tut_node bash -c '/usr/startup/startup.sh; composer update -d /usr/startup/; '
+
+REM     @FOR /f "tokens=*" %i IN ('"c:\Program Files\Docker Toolbox\docker-machine.exe" env') DO @%i
+
+eval $("c:\Program Files\Docker Toolbox\docker-machine.exe" env)
+
+
+oci runtime error: exec failed: container_linux.go:295: starting container process caused "exec: \"bash\": executable file not found in $PATH"
+
+
+
+NODE
+docker build -t mandarharkare/node-web-app .
+
+Way 1:
+docker run -p 49160:8080 -d mandarharkare/node-web-app
+
+Way 2:
+docker-compose build
+
+docker-compose up -d
+
+
+
+
+----------VM Ubuntu
+
+https://www.youtube.com/watch?v=K4q9POtIs4g
+
+sudo docker-compose up -d
