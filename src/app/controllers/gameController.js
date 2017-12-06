@@ -1,48 +1,66 @@
-'use strict';
+var Client = require('../models/client');
+var r = require('rethinkdb');
 
-const r = require('rethinkdb');
+var changesCursor = null;
+var clients = [];
 
-class GameController {
+module.exports.getGames = function(app) {
+  var conn = app.get('rethinkdb.conn');
+  return r.table('games').run(conn).then(function(cursor) {
+    return cursor.toArray();
+  });
+};
 
-	getGames(req) {
-		var conn = req.app.get('rethinkdb.conn');
-		return r.table('games').run(conn).then((cursor) => {
-			return cursor.toArray();
-		});
-	}
+module.exports.monitorAllGames = function(conn) {
+  return r.table('games').changes().run(conn)
+    .then(function(cursor) {
+      changesCursor = cursor;
+      cursor.each(function(err, row) {
+        if (err) {
+          throw err;
+        }
+        else {
+          // send every game to every client
+          var gameJson = JSON.stringify(row.new_val, null, 2);
+          for (var i=0; i<clients.length; i++) {
+            if (clients[i].monitoringAllGames) {
+              clients[i].connection.sendUTF(gameJson);
+            }
+          }
+        }
+      });
+    })
+    .catch(function(err) {
+      console.log('Error monitoring all games: ' + err);
+    });
+};
 
-	getGameById(req) {
-		var conn = req.app.get('rethinkdb.conn');
-		var id = req.query.id;
-		return r.table('games').get(id).run(conn);
-	}
+module.exports.onWebSocketConnection = function(app, request) {
+  console.log(new Date() + ' WebSocket connection accepted.');
+  var connection = request.accept(null, request.origin);
+  var client = new Client(connection, app);
+  clients.push(client);
+  // call onMessageReceivedFromClient when a new message is received from the client
+  connection.on('message', function(message) {
+    if (message.type === 'utf8') {
+      console.log(new Date() + ' WebSocket server received message: ' + message.utf8Data);
+      onMessageReceivedFromClient(client, JSON.parse(message.utf8Data), app);
+    }
+  });
+  connection.on('close', function(reasonCode, description) {
+    // remove the client from the array on close
+    clients.splice(clients.indexOf(client), 1);
+    console.log(new Date() + ' WebSocket client ' + connection.remoteAddress + ' disconnected.');
+  });
+};
 
-	createGame(req) {
-		var conn = req.app.get('rethinkdb.conn');
-		var game = {
-			player1: req.body.game.player1,
-			player2: req.body.game.player2,
-			status: req.body.game.status
-		}
-		return r.table('games').insert(game).run(conn);
-	}
-
-	updateGame(req) {
-		var conn = req.app.get('rethinkdb.conn');
-		var id = req.body.game.id;
-		var game = {
-			player1: req.body.game.player1,
-			player2: req.body.game.player2,
-			status: req.body.game.status
-		}
-		return r.table('games').get(id).update(game).run(conn);
-	}
-
-	deleteGame(req) {
-		var conn = req.app.get('rethinkdb.conn');
-		var id = req.body.game.id;
-		return r.table('games').get(id).delete().run(conn);
-	}
-}
-
-module.exports = GameController;
+var onMessageReceivedFromClient = function(client, message, app) {
+  if (message.monitorAllGames) {
+    console.log(new Date() + ' Request received to monitor all games.');
+    client.monitorAllGames(app);
+  }
+  else if (message.monitorGameId) {
+    console.log(new Date() + ' Request received to monitor game ' + message.monitorGameId + '.');
+    client.monitorGameById(message.monitorGameId, app);
+  }
+};

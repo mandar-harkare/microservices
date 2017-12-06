@@ -29,7 +29,7 @@ if (typeof services == "object" && services !== null &&
 		ssl: {
 			ca: new Buffer(credentials.ca_certificate_base64, "base64").toString("utf-8")
 		},
-		db: "rps"
+		db: "test"
 	};
 }
 else {
@@ -49,5 +49,8 @@ connection = {
 };
 */
 module.exports = {
-	rethinkdb: connection
+	rethinkdb: connection,
+  express: {
+    port: 3000
+  }
 };
